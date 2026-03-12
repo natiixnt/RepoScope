@@ -54,6 +54,14 @@ def generate_markdown_summary(repo_map: RepositoryMap) -> str:
         lines.append("- No internal dependency edges")
     lines.append("")
 
+    lines.append("## Cycles")
+    if repo_map.cycles:
+        for cycle in repo_map.cycles[:20]:
+            lines.append(f"- `{' -> '.join(cycle)}`")
+    else:
+        lines.append("- None detected")
+    lines.append("")
+
     lines.append("## Service Boundaries")
     if repo_map.service_boundaries:
         for boundary in repo_map.service_boundaries[:30]:

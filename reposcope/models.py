@@ -67,6 +67,7 @@ class RepositoryMap:
     critical_paths: list[CriticalPath] = field(default_factory=list)
     service_boundaries: list[ServiceBoundary] = field(default_factory=list)
     api_surfaces: list[APISurface] = field(default_factory=list)
+    cycles: list[list[str]] = field(default_factory=list)
     configs: list[str] = field(default_factory=list)
     tests: list[str] = field(default_factory=list)
     stats: dict[str, int] = field(default_factory=dict)
@@ -102,6 +103,7 @@ class RepositoryMap:
                 for item in payload.get("service_boundaries", [])
             ],
             api_surfaces=[APISurface(**item) for item in payload.get("api_surfaces", [])],
+            cycles=[list(item) for item in payload.get("cycles", [])],
             configs=list(payload.get("configs", [])),
             tests=list(payload.get("tests", [])),
             stats=dict(payload.get("stats", {})),

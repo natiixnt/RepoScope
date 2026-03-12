@@ -15,6 +15,7 @@
     "critical_paths",
     "service_boundaries",
     "api_surfaces",
+    "cycles",
     "configs",
     "tests",
     "stats"
@@ -73,6 +74,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/apiSurface"
+      }
+    },
+    "cycles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cycle"
       }
     },
     "configs": {
@@ -215,6 +222,13 @@
           "type": "string"
         }
       }
+    },
+    "cycle": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2
     }
   }
 }

@@ -122,6 +122,103 @@ def _merge_outputs(outputs: list[AnalyzerOutput]) -> AnalyzerOutput:
     return merged
 
 
+def _build_internal_adjacency(edges: list[DependencyEdge]) -> dict[str, set[str]]:
+    adjacency: dict[str, set[str]] = {}
+    for edge in edges:
+        adjacency.setdefault(edge.source, set()).add(edge.target)
+        adjacency.setdefault(edge.target, set())
+    return adjacency
+
+
+def _find_sccs(adjacency: dict[str, set[str]]) -> list[set[str]]:
+    visited: set[str] = set()
+    order: list[str] = []
+
+    def dfs(node: str) -> None:
+        visited.add(node)
+        for nxt in adjacency.get(node, set()):
+            if nxt not in visited:
+                dfs(nxt)
+        order.append(node)
+
+    for node in adjacency:
+        if node not in visited:
+            dfs(node)
+
+    reversed_adj: dict[str, set[str]] = {node: set() for node in adjacency}
+    for src, targets in adjacency.items():
+        for dst in targets:
+            reversed_adj.setdefault(dst, set()).add(src)
+
+    components: list[set[str]] = []
+    visited.clear()
+
+    def dfs_rev(node: str, component: set[str]) -> None:
+        visited.add(node)
+        component.add(node)
+        for nxt in reversed_adj.get(node, set()):
+            if nxt not in visited:
+                dfs_rev(nxt, component)
+
+    for node in reversed(order):
+        if node in visited:
+            continue
+        component: set[str] = set()
+        dfs_rev(node, component)
+        components.append(component)
+
+    return components
+
+
+def _find_cycle_path(adjacency: dict[str, set[str]], component: set[str]) -> list[str] | None:
+    if not component:
+        return None
+
+    start = sorted(component)[0]
+    path: list[str] = [start]
+    seen_in_path: set[str] = {start}
+
+    def dfs(node: str) -> list[str] | None:
+        for nxt in sorted(adjacency.get(node, set())):
+            if nxt not in component:
+                continue
+            if nxt == start and len(path) > 1:
+                return path + [start]
+            if nxt in seen_in_path:
+                continue
+            seen_in_path.add(nxt)
+            path.append(nxt)
+            found = dfs(nxt)
+            if found is not None:
+                return found
+            path.pop()
+            seen_in_path.remove(nxt)
+        return None
+
+    return dfs(start)
+
+
+def _detect_cycles(edges: list[DependencyEdge]) -> list[list[str]]:
+    adjacency = _build_internal_adjacency(edges)
+    sccs = _find_sccs(adjacency)
+    cycles: list[list[str]] = []
+
+    for component in sccs:
+        if len(component) > 1:
+            cycle_path = _find_cycle_path(adjacency, component)
+            if cycle_path is not None:
+                cycles.append(cycle_path)
+            else:
+                cycles.append(sorted(component))
+            continue
+
+        node = next(iter(component))
+        if node in adjacency.get(node, set()):
+            cycles.append([node, node])
+
+    return sorted(cycles, key=lambda cycle: tuple(cycle))
+
+
 def analyze_repository(
     repo_root: Path,
     *,
@@ -161,6 +258,7 @@ def analyze_repository(
         merged.dependency_edges,
         key=lambda x: (x.source, x.target, x.kind),
     )
+    repo_map.cycles = _detect_cycles(repo_map.dependency_graph)
     repo_map.entrypoints = sorted(
         merged.entrypoints,
         key=lambda x: (x.path, x.reason),
@@ -184,6 +282,7 @@ def analyze_repository(
         "directories_scanned": len(context.directories),
         "modules_detected": len(repo_map.module_map),
         "entrypoints_detected": len(repo_map.entrypoints),
+        "cycles_detected": len(repo_map.cycles),
     }
 
     return repo_map

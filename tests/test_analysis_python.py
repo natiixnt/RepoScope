@@ -49,3 +49,15 @@ def test_python_repository_analysis_detects_semantics(tmp_path: Path) -> None:
     assert any(config == "pyproject.toml" for config in result.configs)
     assert any(test_path.endswith("tests/test_main.py") for test_path in result.tests)
     assert any("auth" in critical.path for critical in result.critical_paths)
+
+
+def test_python_analysis_detects_dependency_cycles(tmp_path: Path) -> None:
+    _write(tmp_path / "pyproject.toml", "[project]\nname='cycle-demo'\n")
+    _write(tmp_path / "a.py", "import b\n")
+    _write(tmp_path / "b.py", "import a\n")
+
+    result = analyze_repository(tmp_path)
+
+    assert result.cycles
+    assert any(cycle[:2] == ["a", "b"] and cycle[-1] == "a" for cycle in result.cycles)
+    assert result.stats.get("cycles_detected", 0) >= 1
