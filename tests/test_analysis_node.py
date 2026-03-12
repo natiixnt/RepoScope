@@ -56,3 +56,55 @@ def test_node_repository_analysis_detects_semantics(tmp_path: Path) -> None:
     assert any(config == "package.json" for config in result.configs)
     assert any(test_path.endswith("tests/server.test.ts") for test_path in result.tests)
     assert any("infra" in critical.path for critical in result.critical_paths)
+
+
+def test_node_tsconfig_path_aliases_are_resolved_as_internal_dependencies(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "package.json",
+        """
+{
+  "name": "demo-node-alias",
+  "main": "src/api/server.ts",
+  "dependencies": {"express": "^4.0.0"}
+}
+""".strip(),
+    )
+    _write(
+        tmp_path / "tsconfig.json",
+        """
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@services/*": ["src/services/*"],
+      "@infra": ["src/infra/db"]
+    }
+  }
+}
+""".strip(),
+    )
+    _write(
+        tmp_path / "src" / "api" / "server.ts",
+        "\n".join(
+            [
+                "import express from 'express';",
+                "import { validate } from '@services/auth';",
+                "import { db } from '@infra';",
+                "const app = express();",
+                "app.get('/health', (_req, res) => res.json({ ok: validate('x'), db: db() }));",
+            ]
+        ),
+    )
+    _write(
+        tmp_path / "src" / "services" / "auth.ts",
+        "export const validate = (x: string) => x.length > 0;\n",
+    )
+    _write(tmp_path / "src" / "infra" / "db.ts", "export const db = () => 'ok';\n")
+
+    result = analyze_repository(tmp_path)
+
+    edges = {(edge.source, edge.target, edge.kind) for edge in result.dependency_graph}
+    assert ("api", "services", "node-import") in edges
+    assert ("api", "infra", "node-import") in edges

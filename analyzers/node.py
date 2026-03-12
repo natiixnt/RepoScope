@@ -82,6 +82,7 @@ class NodeAnalyzer:
             **package_data.get("dependencies", {}),
             **package_data.get("devDependencies", {}),
         }
+        ts_aliases = self._load_ts_aliases(context.repo_root / "tsconfig.json")
 
         for file_path in source_files:
             rel = context.rel(file_path)
@@ -100,12 +101,13 @@ class NodeAnalyzer:
 
             if current_module:
                 for spec in self._extract_import_specs(content):
-                    if self._is_internal_spec(spec, module_names):
+                    if self._is_internal_spec(spec, module_names, ts_aliases):
                         target_module = self._resolve_internal_target(
                             repo_root=context.repo_root,
                             rel_file=rel,
                             spec=spec,
                             module_names=module_names,
+                            ts_aliases=ts_aliases,
                         )
                         if target_module and target_module != current_module:
                             module_internal_deps[current_module].add(target_module)
@@ -201,6 +203,52 @@ class NodeAnalyzer:
             specs.update(pattern.findall(text))
         return specs
 
+    def _load_ts_aliases(self, tsconfig_path: Path) -> dict[str, list[str]]:
+        if not tsconfig_path.exists():
+            return {}
+
+        try:
+            data = json.loads(tsconfig_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return {}
+
+        compiler_options = data.get("compilerOptions")
+        if not isinstance(compiler_options, dict):
+            return {}
+
+        paths = compiler_options.get("paths")
+        if not isinstance(paths, dict):
+            return {}
+
+        base_url = compiler_options.get("baseUrl")
+        if not isinstance(base_url, str):
+            base_url = "."
+
+        aliases: dict[str, list[str]] = {}
+        for key, value in paths.items():
+            if not isinstance(key, str):
+                continue
+
+            raw_targets: list[str]
+            if isinstance(value, str):
+                raw_targets = [value]
+            elif isinstance(value, list):
+                raw_targets = [item for item in value if isinstance(item, str)]
+            else:
+                continue
+
+            normalized_targets: list[str] = []
+            for target in raw_targets:
+                target_path = Path(target)
+                if base_url and base_url != "." and not target_path.is_absolute():
+                    target_path = Path(base_url) / target_path
+                normalized_targets.append(target_path.as_posix())
+
+            if normalized_targets:
+                aliases[key] = normalized_targets
+
+        return aliases
+
     def _normalize_external_package(self, spec: str) -> str:
         if spec.startswith("@"):
             parts = spec.split("/")
@@ -209,12 +257,48 @@ class NodeAnalyzer:
             return spec
         return spec.split("/", 1)[0]
 
-    def _is_internal_spec(self, spec: str, module_names: set[str]) -> bool:
+    def _matches_alias_key(self, spec: str, alias_key: str) -> bool:
+        if "*" not in alias_key:
+            return spec == alias_key
+
+        prefix, suffix = alias_key.split("*", 1)
+        if not spec.startswith(prefix):
+            return False
+        if suffix and not spec.endswith(suffix):
+            return False
+        return len(spec) >= len(prefix) + len(suffix)
+
+    def _resolve_alias_candidate(
+        self,
+        spec: str,
+        alias_key: str,
+        target_pattern: str,
+    ) -> Path:
+        if "*" not in alias_key:
+            return Path(target_pattern.replace("*", ""))
+
+        prefix, suffix = alias_key.split("*", 1)
+        middle = (
+            spec[len(prefix) : len(spec) - len(suffix)]
+            if suffix
+            else spec[len(prefix) :]
+        )
+        return Path(target_pattern.replace("*", middle))
+
+    def _is_internal_spec(
+        self,
+        spec: str,
+        module_names: set[str],
+        ts_aliases: dict[str, list[str]],
+    ) -> bool:
         if spec.startswith(".") or spec.startswith("/"):
             return True
 
         top = spec.split("/", 1)[0]
-        return top in module_names
+        if top in module_names:
+            return True
+
+        return any(self._matches_alias_key(spec, alias_key) for alias_key in ts_aliases)
 
     def _resolve_internal_target(
         self,
@@ -223,6 +307,7 @@ class NodeAnalyzer:
         rel_file: Path,
         spec: str,
         module_names: set[str],
+        ts_aliases: dict[str, list[str]],
     ) -> str | None:
         if spec.startswith("."):
             candidate = (repo_root / rel_file.parent / spec).resolve(strict=False)
@@ -238,6 +323,20 @@ class NodeAnalyzer:
         top = spec.split("/", 1)[0]
         if top in module_names:
             return top
+
+        for alias_key, targets in ts_aliases.items():
+            if not self._matches_alias_key(spec, alias_key):
+                continue
+
+            for target in targets:
+                candidate = self._resolve_alias_candidate(spec, alias_key, target)
+                rel_candidate = Path(candidate.as_posix().lstrip("/"))
+                module = module_name_from_relpath(rel_candidate)
+                if module in module_names:
+                    return module
+
+                if rel_candidate.parts and rel_candidate.parts[0] in module_names:
+                    return rel_candidate.parts[0]
 
         return None
 
