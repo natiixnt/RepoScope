@@ -15,6 +15,8 @@ CONFIG_FILE_NAMES = {
     "pipfile",
     "pipfile.lock",
     "package.json",
+    "go.mod",
+    "go.sum",
     "package-lock.json",
     "yarn.lock",
     "pnpm-lock.yaml",
