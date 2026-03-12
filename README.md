@@ -194,6 +194,7 @@ Repository layout:
 - `schemas/` JSON schema
 - `docs/` architecture notes
 - `examples/` sample projects + outputs
+- `integrations/` ready adapters for Codex/Claude Code/Cursor/custom agents
 - `tests/` pytest suite
 
 ## Roadmap
