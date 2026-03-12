@@ -14,6 +14,7 @@ from reposcope.exporters import (
     repository_map_to_yaml,
 )
 from reposcope.io_utils import load_repository_map, write_markdown, write_repository_map
+from reposcope.mcp_server import run_stdio_server
 from reposcope.models import SCHEMA_VERSION
 from reposcope.summary import (
     generate_compact_markdown_summary,
@@ -133,6 +134,10 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mcp(args: argparse.Namespace) -> int:
+    return run_stdio_server()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="reposcope",
@@ -221,6 +226,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to JSON schema (default bundled repository-map schema)",
     )
     validate.set_defaults(func=cmd_validate)
+
+    mcp = subparsers.add_parser(
+        "mcp",
+        help="Run RepoScope MCP server over stdio",
+    )
+    mcp.set_defaults(func=cmd_mcp)
 
     return parser
 

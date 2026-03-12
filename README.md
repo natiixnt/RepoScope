@@ -63,6 +63,9 @@ reposcope export --format agent-compact
 
 # Validate map against schema
 reposcope validate scope.json
+
+# Run MCP server wrapper (stdio)
+reposcope mcp
 ```
 
 Generated artifacts:

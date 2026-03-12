@@ -13,3 +13,9 @@ Each template focuses on the same pattern:
 2. Feed compact map + summary into the agent before edit planning.
 3. Ask the agent to explain planned changes against module/dependency context.
 4. Re-run RepoScope after larger refactors to refresh context.
+
+For MCP-compatible runtimes, RepoScope also provides a built-in stdio server:
+
+```bash
+reposcope mcp
+```
