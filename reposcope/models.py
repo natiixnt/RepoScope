@@ -15,6 +15,7 @@ class ModuleNode:
     language: str
     files: list[str] = field(default_factory=list)
     internal_dependencies: list[str] = field(default_factory=list)
+    transitive_internal_dependencies: list[str] = field(default_factory=list)
     external_dependencies: list[str] = field(default_factory=list)
 
 

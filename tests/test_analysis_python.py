@@ -61,3 +61,18 @@ def test_python_analysis_detects_dependency_cycles(tmp_path: Path) -> None:
     assert result.cycles
     assert any(cycle[:2] == ["a", "b"] and cycle[-1] == "a" for cycle in result.cycles)
     assert result.stats.get("cycles_detected", 0) >= 1
+
+
+def test_python_analysis_computes_transitive_dependencies(tmp_path: Path) -> None:
+    _write(tmp_path / "pyproject.toml", "[project]\nname='transitive-demo'\n")
+    _write(tmp_path / "a.py", "import b\n")
+    _write(tmp_path / "b.py", "import c\n")
+    _write(tmp_path / "c.py", "def x() -> None:\n    pass\n")
+
+    result = analyze_repository(tmp_path)
+    module_by_name = {module.name: module for module in result.module_map}
+
+    assert module_by_name["a"].internal_dependencies == ["b"]
+    assert module_by_name["a"].transitive_internal_dependencies == ["b", "c"]
+    assert module_by_name["b"].transitive_internal_dependencies == ["c"]
+    assert module_by_name["c"].transitive_internal_dependencies == []

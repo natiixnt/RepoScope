@@ -38,9 +38,10 @@ def generate_markdown_summary(repo_map: RepositoryMap) -> str:
     if repo_map.module_map:
         for module in sorted(repo_map.module_map, key=lambda x: (x.language, x.name))[:40]:
             deps = ", ".join(module.internal_dependencies[:8]) or "none"
+            transitive = ", ".join(module.transitive_internal_dependencies[:8]) or "none"
             exts = ", ".join(module.external_dependencies[:8]) or "none"
             lines.append(
-                f"- `{module.name}` ({module.language}) at `{module.path}` | internal deps: {deps} | external deps: {exts}"
+                f"- `{module.name}` ({module.language}) at `{module.path}` | internal deps: {deps} | transitive deps: {transitive} | external deps: {exts}"
             )
     else:
         lines.append("- None detected")

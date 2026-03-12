@@ -110,6 +110,7 @@
         "language",
         "files",
         "internal_dependencies",
+        "transitive_internal_dependencies",
         "external_dependencies"
       ],
       "properties": {
@@ -129,6 +130,12 @@
           }
         },
         "internal_dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transitive_internal_dependencies": {
           "type": "array",
           "items": {
             "type": "string"

@@ -219,6 +219,29 @@ def _detect_cycles(edges: list[DependencyEdge]) -> list[list[str]]:
     return sorted(cycles, key=lambda cycle: tuple(cycle))
 
 
+def _compute_transitive_dependency_closure(
+    module_names: set[str],
+    edges: list[DependencyEdge],
+) -> dict[str, list[str]]:
+    adjacency = _build_internal_adjacency(edges)
+    closure: dict[str, list[str]] = {}
+
+    for module in sorted(module_names):
+        visited: set[str] = set()
+        stack: list[str] = [module]
+        while stack:
+            current = stack.pop()
+            for nxt in adjacency.get(current, set()):
+                if nxt == module or nxt in visited:
+                    continue
+                if nxt in module_names:
+                    visited.add(nxt)
+                stack.append(nxt)
+        closure[module] = sorted(visited)
+
+    return closure
+
+
 def analyze_repository(
     repo_root: Path,
     *,
@@ -259,6 +282,12 @@ def analyze_repository(
         key=lambda x: (x.source, x.target, x.kind),
     )
     repo_map.cycles = _detect_cycles(repo_map.dependency_graph)
+    transitive = _compute_transitive_dependency_closure(
+        module_names={module.name for module in repo_map.module_map},
+        edges=repo_map.dependency_graph,
+    )
+    for module in repo_map.module_map:
+        module.transitive_internal_dependencies = transitive.get(module.name, [])
     repo_map.entrypoints = sorted(
         merged.entrypoints,
         key=lambda x: (x.path, x.reason),
