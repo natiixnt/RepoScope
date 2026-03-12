@@ -10,6 +10,7 @@ from analyzers.filesystem import FilesystemAnalyzer
 from analyzers.go import GoAnalyzer
 from analyzers.node import NodeAnalyzer
 from analyzers.python import PythonAnalyzer
+from analyzers.rust import RustAnalyzer
 from reposcope.models import (
     APISurface,
     CriticalPath,
@@ -373,6 +374,7 @@ def analyze_repository(
         PythonAnalyzer(),
         NodeAnalyzer(),
         GoAnalyzer(),
+        RustAnalyzer(),
     ]
 
     outputs: list[AnalyzerOutput] = [analyzer.analyze(context) for analyzer in analyzers]
