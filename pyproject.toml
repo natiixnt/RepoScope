@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reposcope"
+version = "0.1.0"
+description = "Semantic repository mapper for coding agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "RepoScope" }]
+dependencies = []
+
+[project.scripts]
+reposcope = "reposcope.cli:main"
+
+[tool.setuptools]
+packages = ["reposcope", "analyzers"]
+include-package-data = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,12 @@
+{
+  "name": "example-node-project",
+  "version": "0.1.0",
+  "main": "src/api/server.ts",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node src/api/server.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.0"
+  }
+}

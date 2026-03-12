@@ -1,0 +1,139 @@
+{
+  "api_surfaces": [
+    {
+      "details": "router/app route declaration",
+      "name": "GET /health",
+      "path": "src/api/server.ts",
+      "surface_type": "http_endpoint"
+    }
+  ],
+  "configs": [
+    "package.json",
+    "tsconfig.json"
+  ],
+  "critical_paths": [
+    {
+      "path": "src/infra",
+      "priority": 3,
+      "reason": "critical domain keyword 'infra'"
+    },
+    {
+      "path": "src/infra/db.ts",
+      "priority": 2,
+      "reason": "critical domain keyword 'infra'"
+    },
+    {
+      "path": "src/services/auth.ts",
+      "priority": 2,
+      "reason": "critical domain keyword 'auth'"
+    }
+  ],
+  "dependency_graph": [
+    {
+      "kind": "node-import",
+      "source": "api",
+      "target": "infra"
+    },
+    {
+      "kind": "node-import",
+      "source": "api",
+      "target": "services"
+    }
+  ],
+  "detected_languages": [
+    "node"
+  ],
+  "entrypoints": [
+    {
+      "framework": null,
+      "path": "package.json",
+      "reason": "package.json dev script: ts-node src/api/server.ts"
+    },
+    {
+      "framework": null,
+      "path": "package.json",
+      "reason": "package.json start script: node dist/server.js"
+    },
+    {
+      "framework": null,
+      "path": "src/api/server.ts",
+      "reason": "entrypoint filename heuristic"
+    },
+    {
+      "framework": "Express",
+      "path": "src/api/server.ts",
+      "reason": "framework import in likely entrypoint"
+    },
+    {
+      "framework": null,
+      "path": "src/api/server.ts",
+      "reason": "package.json main field"
+    }
+  ],
+  "generated_at": "2026-03-12T14:30:43.174765+00:00",
+  "module_map": [
+    {
+      "external_dependencies": [
+        "express"
+      ],
+      "files": [
+        "src/api/server.ts"
+      ],
+      "internal_dependencies": [
+        "infra",
+        "services"
+      ],
+      "language": "node",
+      "name": "api",
+      "path": "src"
+    },
+    {
+      "external_dependencies": [],
+      "files": [
+        "src/infra/db.ts"
+      ],
+      "internal_dependencies": [],
+      "language": "node",
+      "name": "infra",
+      "path": "src"
+    },
+    {
+      "external_dependencies": [],
+      "files": [
+        "src/services/auth.ts"
+      ],
+      "internal_dependencies": [],
+      "language": "node",
+      "name": "services",
+      "path": "src"
+    }
+  ],
+  "repository_name": "node_project",
+  "repository_path": "/Users/naithai/Desktop/amogus/praca/RepoScope/examples/node_project",
+  "schema_version": "1.0.0",
+  "service_boundaries": [
+    {
+      "name": "api",
+      "path": "src/api",
+      "signals": [
+        "service_directory"
+      ]
+    },
+    {
+      "name": "services",
+      "path": "src/services",
+      "signals": [
+        "service_directory"
+      ]
+    }
+  ],
+  "stats": {
+    "directories_scanned": 5,
+    "entrypoints_detected": 5,
+    "files_scanned": 6,
+    "modules_detected": 3
+  },
+  "tests": [
+    "tests/server.test.ts"
+  ]
+}

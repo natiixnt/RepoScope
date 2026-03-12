@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reposcope.dev/schema/repository-map.schema.json",
+  "title": "RepoScope Repository Map",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "repository_name",
+    "repository_path",
+    "detected_languages",
+    "module_map",
+    "dependency_graph",
+    "entrypoints",
+    "critical_paths",
+    "service_boundaries",
+    "api_surfaces",
+    "configs",
+    "tests",
+    "stats"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repository_name": {
+      "type": "string"
+    },
+    "repository_path": {
+      "type": "string"
+    },
+    "detected_languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "module_map": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/module"
+      }
+    },
+    "dependency_graph": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependencyEdge"
+      }
+    },
+    "entrypoints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entrypoint"
+      }
+    },
+    "critical_paths": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/criticalPath"
+      }
+    },
+    "service_boundaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/serviceBoundary"
+      }
+    },
+    "api_surfaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/apiSurface"
+      }
+    },
+    "configs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    }
+  },
+  "$defs": {
+    "module": {
+      "type": "object",
+      "required": [
+        "name",
+        "path",
+        "language",
+        "files",
+        "internal_dependencies",
+        "external_dependencies"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "internal_dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "external_dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dependencyEdge": {
+      "type": "object",
+      "required": ["source", "target", "kind"],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "entrypoint": {
+      "type": "object",
+      "required": ["path", "reason"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "framework": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "criticalPath": {
+      "type": "object",
+      "required": ["path", "reason", "priority"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "priority": {
+          "type": "integer"
+        }
+      }
+    },
+    "serviceBoundary": {
+      "type": "object",
+      "required": ["name", "path", "signals"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "apiSurface": {
+      "type": "object",
+      "required": ["name", "path", "surface_type", "details"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "surface_type": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

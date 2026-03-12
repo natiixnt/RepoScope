@@ -1,0 +1,120 @@
+{
+  "api_surfaces": [
+    {
+      "details": "app.get",
+      "name": "healthcheck",
+      "path": "app/main.py",
+      "surface_type": "http_endpoint"
+    }
+  ],
+  "configs": [
+    "pyproject.toml"
+  ],
+  "critical_paths": [
+    {
+      "path": "app/auth",
+      "priority": 3,
+      "reason": "critical domain keyword 'auth'"
+    },
+    {
+      "path": "app/db",
+      "priority": 3,
+      "reason": "critical domain keyword 'db'"
+    },
+    {
+      "path": "infra",
+      "priority": 3,
+      "reason": "critical domain keyword 'infra'"
+    },
+    {
+      "path": "app/auth/service.py",
+      "priority": 2,
+      "reason": "critical domain keyword 'auth'"
+    },
+    {
+      "path": "app/db/client.py",
+      "priority": 2,
+      "reason": "critical domain keyword 'db'"
+    },
+    {
+      "path": "infra/logging.py",
+      "priority": 2,
+      "reason": "critical domain keyword 'infra'"
+    },
+    {
+      "path": "tests/test_auth.py",
+      "priority": 2,
+      "reason": "critical domain keyword 'auth'"
+    }
+  ],
+  "dependency_graph": [
+    {
+      "kind": "python-import",
+      "source": "app",
+      "target": "infra"
+    }
+  ],
+  "detected_languages": [
+    "python"
+  ],
+  "entrypoints": [
+    {
+      "framework": null,
+      "path": "app/main.py",
+      "reason": "__main__ guard"
+    },
+    {
+      "framework": null,
+      "path": "app/main.py",
+      "reason": "entrypoint filename heuristic"
+    },
+    {
+      "framework": "FastAPI",
+      "path": "app/main.py",
+      "reason": "framework import in likely entrypoint"
+    }
+  ],
+  "generated_at": "2026-03-12T14:30:43.115886+00:00",
+  "module_map": [
+    {
+      "external_dependencies": [
+        "fastapi"
+      ],
+      "files": [
+        "app/__init__.py",
+        "app/auth/service.py",
+        "app/db/client.py",
+        "app/main.py"
+      ],
+      "internal_dependencies": [
+        "infra"
+      ],
+      "language": "python",
+      "name": "app",
+      "path": "app"
+    },
+    {
+      "external_dependencies": [],
+      "files": [
+        "infra/logging.py"
+      ],
+      "internal_dependencies": [],
+      "language": "python",
+      "name": "infra",
+      "path": "infra"
+    }
+  ],
+  "repository_name": "python_project",
+  "repository_path": "/Users/naithai/Desktop/amogus/praca/RepoScope/examples/python_project",
+  "schema_version": "1.0.0",
+  "service_boundaries": [],
+  "stats": {
+    "directories_scanned": 5,
+    "entrypoints_detected": 3,
+    "files_scanned": 7,
+    "modules_detected": 2
+  },
+  "tests": [
+    "tests/test_auth.py"
+  ]
+}
