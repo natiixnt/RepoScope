@@ -19,7 +19,7 @@
 5. Writers emit:
    - canonical JSON semantic map
    - markdown summary optimized for quick human + agent review
-   - optional YAML and Mermaid exports via CLI `export`
+   - optional YAML, Mermaid, DOT, and compact-agent exports via CLI `export`
 
 ## Data Contract
 

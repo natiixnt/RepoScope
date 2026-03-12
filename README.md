@@ -58,6 +58,8 @@ reposcope summary scope.json
 reposcope export --format json
 reposcope export --format yaml
 reposcope export --format mermaid
+reposcope export --format dot
+reposcope export --format agent-compact
 
 # Validate map against schema
 reposcope validate scope.json
@@ -73,7 +75,7 @@ Generated artifacts:
 - Lightweight Python CLI: `reposcope`
 - Local repository analysis (filesystem + language analyzers)
 - Structured JSON semantic map output
-- Additional export formats: YAML, Mermaid
+- Additional export formats: YAML, Mermaid, DOT, compact agent summary
 - Markdown summary output
 - Detection for:
   - top-level modules
@@ -160,6 +162,8 @@ reposcope export --format json
 reposcope export --format markdown
 reposcope export --format yaml
 reposcope export --format mermaid
+reposcope export --format dot
+reposcope export --format agent-compact
 
 # 4) Validate schema compliance
 reposcope validate scope.json
@@ -229,6 +233,13 @@ repos:
 ```
 
 Hook definition lives in `.pre-commit-hooks.yaml` and runs `scripts/pre-commit-reposcope.sh`.
+
+GitHub Action integration:
+
+- Workflow file: `.github/workflows/reposcope-pr.yml`
+- Trigger: pull requests
+- Outputs: `scope.json` + `scope.md` artifact upload
+- Optional PR comment with summary preview
 
 ## License
 

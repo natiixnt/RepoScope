@@ -100,3 +100,79 @@ def generate_markdown_summary(repo_map: RepositoryMap) -> str:
     lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
+
+
+def generate_compact_markdown_summary(repo_map: RepositoryMap) -> str:
+    lines: list[str] = []
+    lines.append(f"# RepoScope Agent Compact: {repo_map.repository_name}")
+    lines.append("")
+    lines.append(
+        f"- languages: {', '.join(repo_map.detected_languages) if repo_map.detected_languages else 'none'}"
+    )
+    lines.append(
+        f"- modules: {len(repo_map.module_map)} | edges: {len(repo_map.dependency_graph)} | entrypoints: {len(repo_map.entrypoints)}"
+    )
+    lines.append(
+        f"- critical_paths: {len(repo_map.critical_paths)} | api_surfaces: {len(repo_map.api_surfaces)}"
+    )
+    lines.append("")
+
+    lines.append("## Top Entrypoints")
+    if repo_map.entrypoints:
+        for entrypoint in repo_map.entrypoints[:8]:
+            framework = f" ({entrypoint.framework})" if entrypoint.framework else ""
+            lines.append(f"- `{entrypoint.path}`{framework}: {entrypoint.reason}")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## Top Critical Paths")
+    if repo_map.critical_paths:
+        for critical in repo_map.critical_paths[:10]:
+            lines.append(
+                f"- `{critical.path}` [p{critical.priority}]: {critical.reason}"
+            )
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## API Surface Preview")
+    if repo_map.api_surfaces:
+        for surface in repo_map.api_surfaces[:10]:
+            lines.append(
+                f"- `{surface.name}` ({surface.surface_type}) in `{surface.path}`"
+            )
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## High-Signal Dependencies")
+    if repo_map.dependency_graph:
+        for edge in repo_map.dependency_graph[:20]:
+            lines.append(f"- `{edge.source}` -> `{edge.target}` ({edge.kind})")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## Priority Files")
+    priority_files: list[str] = []
+    priority_files.extend(entry.path for entry in repo_map.entrypoints[:6])
+    priority_files.extend(path.path for path in repo_map.critical_paths[:8])
+    priority_files.extend(surface.path for surface in repo_map.api_surfaces[:8])
+    priority_files.extend(repo_map.configs[:6])
+    deduped = []
+    seen = set()
+    for file_path in priority_files:
+        if file_path in seen:
+            continue
+        seen.add(file_path)
+        deduped.append(file_path)
+
+    if deduped:
+        for file_path in deduped[:20]:
+            lines.append(f"- `{file_path}`")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"

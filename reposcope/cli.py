@@ -8,10 +8,17 @@ from typing import Sequence
 
 from reposcope import __version__
 from reposcope.engine import analyze_repository
-from reposcope.exporters import repository_map_to_mermaid, repository_map_to_yaml
+from reposcope.exporters import (
+    repository_map_to_dot,
+    repository_map_to_mermaid,
+    repository_map_to_yaml,
+)
 from reposcope.io_utils import load_repository_map, write_markdown, write_repository_map
 from reposcope.models import SCHEMA_VERSION
-from reposcope.summary import generate_markdown_summary
+from reposcope.summary import (
+    generate_compact_markdown_summary,
+    generate_markdown_summary,
+)
 from reposcope.validator import validate_json_file
 
 
@@ -57,7 +64,11 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 
 def cmd_summary(args: argparse.Namespace) -> int:
     repo_map = load_repository_map(Path(args.input))
-    summary = generate_markdown_summary(repo_map)
+    summary = (
+        generate_compact_markdown_summary(repo_map)
+        if args.compact
+        else generate_markdown_summary(repo_map)
+    )
     _write_stdout_or_file(summary, args.output)
     return 0
 
@@ -77,8 +88,12 @@ def cmd_export(args: argparse.Namespace) -> int:
     repo_map = load_repository_map(input_path)
     if args.format == "markdown":
         content = generate_markdown_summary(repo_map)
+    elif args.format == "agent-compact":
+        content = generate_compact_markdown_summary(repo_map)
     elif args.format == "yaml":
         content = repository_map_to_yaml(repo_map)
+    elif args.format == "dot":
+        content = repository_map_to_dot(repo_map)
     else:
         content = repository_map_to_mermaid(repo_map)
 
@@ -154,15 +169,31 @@ def build_parser() -> argparse.ArgumentParser:
         default="-",
         help="Output path (default stdout)",
     )
+    summary.add_argument(
+        "--compact",
+        action="store_true",
+        help="Generate compact high-signal summary for coding agents",
+    )
     summary.set_defaults(func=cmd_summary)
 
     export = subparsers.add_parser(
         "export",
-        help="Export cached analysis as JSON or markdown",
+        help="Export cached analysis as JSON, markdown, compact, graph, or YAML",
     )
     export.add_argument(
         "--format",
-        choices=["json", "markdown", "md", "yaml", "yml", "mermaid", "mmd"],
+        choices=[
+            "json",
+            "markdown",
+            "md",
+            "agent-compact",
+            "compact",
+            "yaml",
+            "yml",
+            "mermaid",
+            "mmd",
+            "dot",
+        ],
         default="json",
         help="Export format",
     )
@@ -209,6 +240,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.format = "yaml"
         elif args.format == "mmd":
             args.format = "mermaid"
+        elif args.format == "compact":
+            args.format = "agent-compact"
     return args.func(args)
 
 

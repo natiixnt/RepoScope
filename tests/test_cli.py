@@ -208,3 +208,70 @@ def test_cli_export_yaml_and_mermaid(tmp_path: Path) -> None:
     assert "module_map:" in yaml_content
     assert "graph TD" in mermaid_content
     assert "-->|python-import|" in mermaid_content
+
+
+def test_cli_export_dot_and_compact(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _write(repo / "pyproject.toml", "[project]\nname='exports-2'\n")
+    _write(repo / "app" / "main.py", "from infra.db import ping\n")
+    _write(repo / "infra" / "db.py", "def ping() -> str:\n    return 'ok'\n")
+
+    scope_json = tmp_path / "scope.json"
+    scope_md = tmp_path / "scope.md"
+    dot_out = tmp_path / "scope.dot"
+    compact_out = tmp_path / "scope-compact.md"
+
+    assert main(["analyze", str(repo), "-o", str(scope_json), "--summary-output", str(scope_md)]) == 0
+
+    assert (
+        main(
+            [
+                "export",
+                "--format",
+                "dot",
+                "--input",
+                str(scope_json),
+                "-o",
+                str(dot_out),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "export",
+                "--format",
+                "agent-compact",
+                "--input",
+                str(scope_json),
+                "-o",
+                str(compact_out),
+            ]
+        )
+        == 0
+    )
+
+    dot_content = dot_out.read_text(encoding="utf-8")
+    compact_content = compact_out.read_text(encoding="utf-8")
+
+    assert "digraph RepoScope" in dot_content
+    assert "->" in dot_content
+    assert 'label="python-import"' in dot_content
+    assert "# RepoScope Agent Compact:" in compact_content
+    assert "## High-Signal Dependencies" in compact_content
+
+
+def test_cli_summary_compact_flag(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _write(repo / "pyproject.toml", "[project]\nname='summary-compact'\n")
+    _write(repo / "main.py", "def main() -> None:\n    pass\n")
+
+    scope_json = tmp_path / "scope.json"
+    scope_md = tmp_path / "scope.md"
+    compact_summary = tmp_path / "compact.md"
+    assert main(["analyze", str(repo), "-o", str(scope_json), "--summary-output", str(scope_md)]) == 0
+
+    assert main(["summary", str(scope_json), "--compact", "-o", str(compact_summary)]) == 0
+    content = compact_summary.read_text(encoding="utf-8")
+    assert "# RepoScope Agent Compact:" in content
