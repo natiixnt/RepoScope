@@ -34,6 +34,18 @@ def generate_markdown_summary(repo_map: RepositoryMap) -> str:
         lines.append("- None detected")
     lines.append("")
 
+    lines.append("## Entrypoint Reachability")
+    if repo_map.entrypoint_reachability:
+        for item in repo_map.entrypoint_reachability[:20]:
+            start = ", ".join(item.start_modules) or "none"
+            reachable = ", ".join(item.reachable_modules) or "none"
+            lines.append(
+                f"- `{item.entrypoint_path}` ({item.reason}) | start modules: {start} | reachable modules: {reachable}"
+            )
+    else:
+        lines.append("- None detected")
+    lines.append("")
+
     lines.append("## Module Map")
     if repo_map.module_map:
         for module in sorted(repo_map.module_map, key=lambda x: (x.language, x.name))[:40]:
@@ -131,6 +143,15 @@ def generate_compact_markdown_summary(repo_map: RepositoryMap) -> str:
         for entrypoint in repo_map.entrypoints[:8]:
             framework = f" ({entrypoint.framework})" if entrypoint.framework else ""
             lines.append(f"- `{entrypoint.path}`{framework}: {entrypoint.reason}")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## Entrypoint Reachability")
+    if repo_map.entrypoint_reachability:
+        for item in repo_map.entrypoint_reachability[:8]:
+            reachable = ", ".join(item.reachable_modules[:8]) or "none"
+            lines.append(f"- `{item.entrypoint_path}` -> {reachable}")
     else:
         lines.append("- none")
     lines.append("")

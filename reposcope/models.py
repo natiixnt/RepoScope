@@ -56,6 +56,14 @@ class APISurface:
 
 
 @dataclass(slots=True)
+class EntrypointReachability:
+    entrypoint_path: str
+    reason: str
+    start_modules: list[str] = field(default_factory=list)
+    reachable_modules: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
 class RepositoryMap:
     schema_version: str
     generated_at: str
@@ -65,6 +73,7 @@ class RepositoryMap:
     module_map: list[ModuleNode] = field(default_factory=list)
     dependency_graph: list[DependencyEdge] = field(default_factory=list)
     entrypoints: list[Entrypoint] = field(default_factory=list)
+    entrypoint_reachability: list[EntrypointReachability] = field(default_factory=list)
     critical_paths: list[CriticalPath] = field(default_factory=list)
     service_boundaries: list[ServiceBoundary] = field(default_factory=list)
     api_surfaces: list[APISurface] = field(default_factory=list)
@@ -98,6 +107,10 @@ class RepositoryMap:
                 DependencyEdge(**item) for item in payload.get("dependency_graph", [])
             ],
             entrypoints=[Entrypoint(**item) for item in payload.get("entrypoints", [])],
+            entrypoint_reachability=[
+                EntrypointReachability(**item)
+                for item in payload.get("entrypoint_reachability", [])
+            ],
             critical_paths=[CriticalPath(**item) for item in payload.get("critical_paths", [])],
             service_boundaries=[
                 ServiceBoundary(**item)

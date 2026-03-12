@@ -12,6 +12,7 @@
     "module_map",
     "dependency_graph",
     "entrypoints",
+    "entrypoint_reachability",
     "critical_paths",
     "service_boundaries",
     "api_surfaces",
@@ -56,6 +57,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/entrypoint"
+      }
+    },
+    "entrypoint_reachability": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entrypointReachability"
       }
     },
     "critical_paths": {
@@ -176,6 +183,35 @@
         },
         "framework": {
           "type": ["string", "null"]
+        }
+      }
+    },
+    "entrypointReachability": {
+      "type": "object",
+      "required": [
+        "entrypoint_path",
+        "reason",
+        "start_modules",
+        "reachable_modules"
+      ],
+      "properties": {
+        "entrypoint_path": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "start_modules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reachable_modules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

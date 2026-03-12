@@ -49,6 +49,12 @@ def test_python_repository_analysis_detects_semantics(tmp_path: Path) -> None:
     assert any(config == "pyproject.toml" for config in result.configs)
     assert any(test_path.endswith("tests/test_main.py") for test_path in result.tests)
     assert any("auth" in critical.path for critical in result.critical_paths)
+    reachability = [
+        item for item in result.entrypoint_reachability if item.entrypoint_path.endswith("app/main.py")
+    ]
+    assert reachability
+    assert any("app" in item.start_modules for item in reachability)
+    assert any("infra" in item.reachable_modules for item in reachability)
 
 
 def test_python_analysis_detects_dependency_cycles(tmp_path: Path) -> None:

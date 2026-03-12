@@ -14,6 +14,7 @@ from reposcope.models import (
     CriticalPath,
     DependencyEdge,
     Entrypoint,
+    EntrypointReachability,
     ModuleNode,
     RepositoryMap,
     ServiceBoundary,
@@ -242,6 +243,35 @@ def _compute_transitive_dependency_closure(
     return closure
 
 
+def _compute_entrypoint_reachability(
+    entrypoints: list[Entrypoint],
+    modules: list[ModuleNode],
+    transitive: dict[str, list[str]],
+) -> list[EntrypointReachability]:
+    file_to_modules: dict[str, set[str]] = {}
+    for module in modules:
+        for file_path in module.files:
+            file_to_modules.setdefault(file_path, set()).add(module.name)
+
+    reachability: list[EntrypointReachability] = []
+    for entrypoint in entrypoints:
+        start_modules = sorted(file_to_modules.get(entrypoint.path, set()))
+        reachable: set[str] = set(start_modules)
+        for start in start_modules:
+            reachable.update(transitive.get(start, []))
+
+        reachability.append(
+            EntrypointReachability(
+                entrypoint_path=entrypoint.path,
+                reason=entrypoint.reason,
+                start_modules=start_modules,
+                reachable_modules=sorted(reachable),
+            )
+        )
+
+    return reachability
+
+
 def analyze_repository(
     repo_root: Path,
     *,
@@ -292,6 +322,11 @@ def analyze_repository(
         merged.entrypoints,
         key=lambda x: (x.path, x.reason),
     )
+    repo_map.entrypoint_reachability = _compute_entrypoint_reachability(
+        entrypoints=repo_map.entrypoints,
+        modules=repo_map.module_map,
+        transitive=transitive,
+    )
     repo_map.critical_paths = sorted(
         merged.critical_paths,
         key=lambda x: (-x.priority, x.path),
@@ -311,6 +346,7 @@ def analyze_repository(
         "directories_scanned": len(context.directories),
         "modules_detected": len(repo_map.module_map),
         "entrypoints_detected": len(repo_map.entrypoints),
+        "entrypoint_reachability_detected": len(repo_map.entrypoint_reachability),
         "cycles_detected": len(repo_map.cycles),
     }
 
