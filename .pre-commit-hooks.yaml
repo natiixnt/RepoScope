@@ -1,0 +1,6 @@
+- id: reposcope-analyze
+  name: reposcope-analyze
+  description: Generate RepoScope semantic map and markdown summary
+  entry: scripts/pre-commit-reposcope.sh
+  language: script
+  pass_filenames: false

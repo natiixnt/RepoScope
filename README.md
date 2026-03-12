@@ -56,6 +56,8 @@ reposcope summary scope.json
 
 # Export cached map
 reposcope export --format json
+reposcope export --format yaml
+reposcope export --format mermaid
 
 # Validate map against schema
 reposcope validate scope.json
@@ -71,6 +73,7 @@ Generated artifacts:
 - Lightweight Python CLI: `reposcope`
 - Local repository analysis (filesystem + language analyzers)
 - Structured JSON semantic map output
+- Additional export formats: YAML, Mermaid
 - Markdown summary output
 - Detection for:
   - top-level modules
@@ -155,6 +158,8 @@ reposcope summary scope.json -o scope.md
 # 3) Export from cache
 reposcope export --format json
 reposcope export --format markdown
+reposcope export --format yaml
+reposcope export --format mermaid
 
 # 4) Validate schema compliance
 reposcope validate scope.json
@@ -211,6 +216,19 @@ Good first areas:
 - dependency-resolution accuracy
 - output stability and schema validation
 - documentation and integration examples
+
+Pre-commit integration:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/natiixnt/RepoScope
+    rev: main
+    hooks:
+      - id: reposcope-analyze
+```
+
+Hook definition lives in `.pre-commit-hooks.yaml` and runs `scripts/pre-commit-reposcope.sh`.
 
 ## License
 

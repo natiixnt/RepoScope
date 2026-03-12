@@ -8,6 +8,7 @@ from typing import Sequence
 
 from reposcope import __version__
 from reposcope.engine import analyze_repository
+from reposcope.exporters import repository_map_to_mermaid, repository_map_to_yaml
 from reposcope.io_utils import load_repository_map, write_markdown, write_repository_map
 from reposcope.models import SCHEMA_VERSION
 from reposcope.summary import generate_markdown_summary
@@ -74,8 +75,14 @@ def cmd_export(args: argparse.Namespace) -> int:
         return 0
 
     repo_map = load_repository_map(input_path)
-    summary = generate_markdown_summary(repo_map)
-    _write_stdout_or_file(summary, args.output)
+    if args.format == "markdown":
+        content = generate_markdown_summary(repo_map)
+    elif args.format == "yaml":
+        content = repository_map_to_yaml(repo_map)
+    else:
+        content = repository_map_to_mermaid(repo_map)
+
+    _write_stdout_or_file(content, args.output)
     return 0
 
 
@@ -155,7 +162,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     export.add_argument(
         "--format",
-        choices=["json", "markdown", "md"],
+        choices=["json", "markdown", "md", "yaml", "yml", "mermaid", "mmd"],
         default="json",
         help="Export format",
     )
@@ -195,8 +202,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser = build_parser()
     args = parser.parse_args(raw_args)
-    if args.command == "export" and args.format == "md":
-        args.format = "markdown"
+    if args.command == "export":
+        if args.format == "md":
+            args.format = "markdown"
+        elif args.format == "yml":
+            args.format = "yaml"
+        elif args.format == "mmd":
+            args.format = "mermaid"
     return args.func(args)
 
 

@@ -157,3 +157,54 @@ def test_analyze_is_deterministic_except_timestamp(tmp_path: Path) -> None:
     payload_b.pop("generated_at", None)
 
     assert payload_a == payload_b
+
+
+def test_cli_export_yaml_and_mermaid(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _write(repo / "pyproject.toml", "[project]\nname='exports'\n")
+    _write(repo / "a.py", "import b\n")
+    _write(repo / "b.py", "def f() -> None:\n    pass\n")
+
+    scope_json = tmp_path / "scope.json"
+    scope_md = tmp_path / "scope.md"
+    yaml_out = tmp_path / "scope.yaml"
+    mermaid_out = tmp_path / "scope.mmd"
+
+    assert main(["analyze", str(repo), "-o", str(scope_json), "--summary-output", str(scope_md)]) == 0
+
+    assert (
+        main(
+            [
+                "export",
+                "--format",
+                "yaml",
+                "--input",
+                str(scope_json),
+                "-o",
+                str(yaml_out),
+            ]
+        )
+        == 0
+    )
+    assert (
+        main(
+            [
+                "export",
+                "--format",
+                "mermaid",
+                "--input",
+                str(scope_json),
+                "-o",
+                str(mermaid_out),
+            ]
+        )
+        == 0
+    )
+
+    yaml_content = yaml_out.read_text(encoding="utf-8")
+    mermaid_content = mermaid_out.read_text(encoding="utf-8")
+
+    assert "schema_version:" in yaml_content
+    assert "module_map:" in yaml_content
+    assert "graph TD" in mermaid_content
+    assert "-->|python-import|" in mermaid_content
