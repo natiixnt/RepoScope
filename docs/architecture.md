@@ -17,6 +17,7 @@
    - `analyzers.node`: import graph, package.json entrypoints, route heuristics
    - `analyzers.go`: go.mod/internal imports and main.go entrypoints
    - `analyzers.rust`: Cargo crate dependencies and main binary entrypoints
+   - `analyzers.java`: package import mapping and framework/main entrypoint signals
 4. Engine merges and deduplicates analyzer outputs into `RepositoryMap`.
    - graph enrichments: cycle detection, transitive closure, entrypoint reachability
    - module criticality ranking with transparent signals

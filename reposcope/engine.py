@@ -8,6 +8,7 @@ from typing import Callable, TypeVar
 from analyzers.base import AnalysisContext, AnalyzerOutput
 from analyzers.filesystem import FilesystemAnalyzer
 from analyzers.go import GoAnalyzer
+from analyzers.java import JavaAnalyzer
 from analyzers.node import NodeAnalyzer
 from analyzers.python import PythonAnalyzer
 from analyzers.rust import RustAnalyzer
@@ -375,6 +376,7 @@ def analyze_repository(
         NodeAnalyzer(),
         GoAnalyzer(),
         RustAnalyzer(),
+        JavaAnalyzer(),
     ]
 
     outputs: list[AnalyzerOutput] = [analyzer.analyze(context) for analyzer in analyzers]

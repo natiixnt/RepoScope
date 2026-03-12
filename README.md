@@ -77,7 +77,7 @@ Generated artifacts:
 
 - Lightweight Python CLI: `reposcope`
 - Local repository analysis (filesystem + language analyzers)
-- Built-in analyzers: Python, Node, Go, Rust
+- Built-in analyzers: Python, Node, Go, Rust, Java
 - Structured JSON semantic map output
 - Additional export formats: YAML, Mermaid, DOT, compact agent summary
 - Markdown summary output
@@ -188,6 +188,7 @@ Execution pipeline:
    - `node` analyzer: imports, package entrypoints, route heuristics
    - `go` analyzer: go.mod module imports and main.go entrypoint detection
    - `rust` analyzer: Cargo crate/workspace dependencies and binary entrypoints
+   - `java` analyzer: package import mapping, main methods, and Spring Boot entrypoints
 3. Analyzer outputs are merged into a deduplicated `RepositoryMap`.
 4. Writers emit stable JSON + Markdown artifacts.
 
