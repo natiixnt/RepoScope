@@ -55,6 +55,12 @@ def test_python_repository_analysis_detects_semantics(tmp_path: Path) -> None:
     assert reachability
     assert any("app" in item.start_modules for item in reachability)
     assert any("infra" in item.reachable_modules for item in reachability)
+    assert result.module_criticality
+    assert any(
+        item.module == "app" and "entrypoint_start" in item.signals
+        for item in result.module_criticality
+    )
+    assert result.module_criticality[0].score >= result.module_criticality[-1].score
 
 
 def test_python_analysis_detects_dependency_cycles(tmp_path: Path) -> None:

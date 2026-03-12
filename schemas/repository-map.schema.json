@@ -13,6 +13,7 @@
     "dependency_graph",
     "entrypoints",
     "entrypoint_reachability",
+    "module_criticality",
     "critical_paths",
     "service_boundaries",
     "api_surfaces",
@@ -63,6 +64,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/entrypointReachability"
+      }
+    },
+    "module_criticality": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/moduleCriticality"
       }
     },
     "critical_paths": {
@@ -208,6 +215,24 @@
           }
         },
         "reachable_modules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "moduleCriticality": {
+      "type": "object",
+      "required": ["module", "score", "signals"],
+      "properties": {
+        "module": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "signals": {
           "type": "array",
           "items": {
             "type": "string"

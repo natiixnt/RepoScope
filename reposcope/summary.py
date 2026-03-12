@@ -46,6 +46,15 @@ def generate_markdown_summary(repo_map: RepositoryMap) -> str:
         lines.append("- None detected")
     lines.append("")
 
+    lines.append("## Module Criticality")
+    if repo_map.module_criticality:
+        for item in repo_map.module_criticality[:20]:
+            signals = ", ".join(item.signals) or "none"
+            lines.append(f"- `{item.module}` score `{item.score}` | signals: {signals}")
+    else:
+        lines.append("- None detected")
+    lines.append("")
+
     lines.append("## Module Map")
     if repo_map.module_map:
         for module in sorted(repo_map.module_map, key=lambda x: (x.language, x.name))[:40]:
@@ -152,6 +161,14 @@ def generate_compact_markdown_summary(repo_map: RepositoryMap) -> str:
         for item in repo_map.entrypoint_reachability[:8]:
             reachable = ", ".join(item.reachable_modules[:8]) or "none"
             lines.append(f"- `{item.entrypoint_path}` -> {reachable}")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    lines.append("## Module Criticality")
+    if repo_map.module_criticality:
+        for item in repo_map.module_criticality[:8]:
+            lines.append(f"- `{item.module}` ({item.score})")
     else:
         lines.append("- none")
     lines.append("")

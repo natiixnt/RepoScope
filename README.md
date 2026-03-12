@@ -80,6 +80,10 @@ Generated artifacts:
 - Detection for:
   - top-level modules
   - internal dependencies/imports
+  - transitive dependency closure
+  - dependency cycles
+  - entrypoint reachability
+  - module criticality ranking
   - framework entrypoints
   - config files
   - tests

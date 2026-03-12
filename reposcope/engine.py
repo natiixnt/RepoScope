@@ -15,6 +15,7 @@ from reposcope.models import (
     DependencyEdge,
     Entrypoint,
     EntrypointReachability,
+    ModuleCriticality,
     ModuleNode,
     RepositoryMap,
     ServiceBoundary,
@@ -272,6 +273,80 @@ def _compute_entrypoint_reachability(
     return reachability
 
 
+def _compute_module_criticality(
+    modules: list[ModuleNode],
+    edges: list[DependencyEdge],
+    entrypoint_reachability: list[EntrypointReachability],
+    critical_paths: list[CriticalPath],
+    cycles: list[list[str]],
+) -> list[ModuleCriticality]:
+    adjacency = _build_internal_adjacency(edges)
+    incoming: dict[str, int] = {module.name: 0 for module in modules}
+    outgoing: dict[str, int] = {module.name: 0 for module in modules}
+
+    for source, targets in adjacency.items():
+        if source in outgoing:
+            outgoing[source] = len(targets)
+        for target in targets:
+            if target in incoming:
+                incoming[target] += 1
+
+    entry_start_modules = {
+        module_name
+        for item in entrypoint_reachability
+        for module_name in item.start_modules
+    }
+    entry_reachable_modules = {
+        module_name
+        for item in entrypoint_reachability
+        for module_name in item.reachable_modules
+    }
+    cycle_nodes = {node for cycle in cycles for node in cycle}
+
+    ranking: list[ModuleCriticality] = []
+    for module in modules:
+        score = 1.0
+        signals: list[str] = []
+
+        in_degree = incoming.get(module.name, 0)
+        if in_degree:
+            score += in_degree * 2.0
+            signals.append(f"in_degree={in_degree}")
+
+        out_degree = outgoing.get(module.name, 0)
+        if out_degree:
+            score += out_degree * 1.5
+            signals.append(f"out_degree={out_degree}")
+
+        if module.name in entry_start_modules:
+            score += 3.0
+            signals.append("entrypoint_start")
+        elif module.name in entry_reachable_modules:
+            score += 1.0
+            signals.append("reachable_from_entrypoint")
+
+        critical_hits = sum(
+            1 for critical in critical_paths if critical.path.startswith(module.path)
+        )
+        if critical_hits:
+            score += min(critical_hits * 0.75, 3.0)
+            signals.append(f"critical_path_hits={critical_hits}")
+
+        if module.name in cycle_nodes:
+            score += 1.5
+            signals.append("in_cycle")
+
+        ranking.append(
+            ModuleCriticality(
+                module=module.name,
+                score=round(score, 3),
+                signals=signals,
+            )
+        )
+
+    return sorted(ranking, key=lambda item: (-item.score, item.module))
+
+
 def analyze_repository(
     repo_root: Path,
     *,
@@ -331,6 +406,13 @@ def analyze_repository(
         merged.critical_paths,
         key=lambda x: (-x.priority, x.path),
     )
+    repo_map.module_criticality = _compute_module_criticality(
+        modules=repo_map.module_map,
+        edges=repo_map.dependency_graph,
+        entrypoint_reachability=repo_map.entrypoint_reachability,
+        critical_paths=repo_map.critical_paths,
+        cycles=repo_map.cycles,
+    )
     repo_map.service_boundaries = sorted(
         merged.service_boundaries,
         key=lambda x: (x.path, x.name),
@@ -348,6 +430,7 @@ def analyze_repository(
         "entrypoints_detected": len(repo_map.entrypoints),
         "entrypoint_reachability_detected": len(repo_map.entrypoint_reachability),
         "cycles_detected": len(repo_map.cycles),
+        "critical_modules_ranked": len(repo_map.module_criticality),
     }
 
     return repo_map
